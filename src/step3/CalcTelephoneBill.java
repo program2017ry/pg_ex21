@@ -14,7 +14,6 @@ public class CalcTelephoneBill {
 		String readFileName = "C:\\esm-semi\\ex21\\record.log";
 		String writerFileName = "C:\\esm-semi\\ex21\\invoice.dat";
 		try {
-			System.out.println(111);
 			BufferedWriter writer = new BufferedWriter(new FileWriter(writerFileName));
 			BufferedReader reader = new BufferedReader(new FileReader(readFileName));
 			int basicFee = 1000;	// 基本料金(月)
@@ -26,7 +25,8 @@ public class CalcTelephoneBill {
 			ArrayList <String> registerPhoneNumList = new ArrayList();	//C1の場合の登録電話番号
 
 			while ((line = reader.readLine()) != null) {
-				switch (line.charAt(0)) {
+				Record record = new Record(line);
+				switch (record.getRecordCode()) {
 				case '1':
 					// 初期化処理
 					serviceCodeList.clear();
@@ -36,24 +36,24 @@ public class CalcTelephoneBill {
 					totalTelephoneFee = 0;
 
 					//契約者情報取得
-					userInfo = getUserInfo(line);
+					userInfo = record.getOwnerTelNumber();
 					break;
 
 				case '2':
 					//サービスコード取得し、Listに保存
-					String serviceCode = getServiceCode(line);
+					String serviceCode = record.getServiceCode();
 					serviceCodeList.add(serviceCode);
 
 					// ServiceCodeがC1の場合は、登録電話番号を取得し、Listに保存
 					if (serviceCode.equals("C1")) {
-						String registerPhoneNum = getRegsiterPhoneNum(line);
+						String registerPhoneNum = record.getServiceOption();
 						registerPhoneNumList.add(registerPhoneNum);
 					}
 					break;
 
 				case '5':
 					//通話開始時間を取得
-					int startTelephoneTime = getStartTelephoneTime(line);
+					int startTelephoneTime = record.getStartHour();
 
 					// E1でかつ、通話開始時間が日勤帯の場合、通話料は5円引き/分
 					if (checkLunchService(serviceCodeList,startTelephoneTime)) {
@@ -61,7 +61,7 @@ public class CalcTelephoneBill {
 					}
 
 					// 登録先電話番号への通話半額
-					String phoneNum = getPhoneNum(line);
+					String phoneNum = record.getCallNumber();
 					if (registerPhoneNumList.contains(phoneNum)) {
 						minuteFee = minuteFee/2;
 					}
@@ -80,17 +80,20 @@ public class CalcTelephoneBill {
 
 					//サービスコードに応じて、基本料金を算出
 					calcBasicFee(basicFee,serviceCodeList);
-
-					writer.write(userInfo + "\n");
-					writer.write("5 " + basicFee + "\n");
-					writer.write("7 " + totalTelephoneFee + "\n");
-					writer.write(separeteLine + "\n");
+					System.out.println(userInfo + "\n");
+					System.out.println("5 " + basicFee + "\n");
+					System.out.println("7 " + totalTelephoneFee + "\n");
+					System.out.println(separeteLine + "\n");
+//					writer.write(userInfo + "\n");
+//					writer.write("5 " + basicFee + "\n");
+//					writer.write("7 " + totalTelephoneFee + "\n");
+//					writer.write(separeteLine + "\n");
 					break;
 				}
-				writer.flush();
-				reader.close();
-				writer.close();
 			}
+			writer.flush();
+			reader.close();
+			writer.close();
 		} catch (FileNotFoundException e) {
 			System.out.println(e);
 		} catch (IOException e) {
