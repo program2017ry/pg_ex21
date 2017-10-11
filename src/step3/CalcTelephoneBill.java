@@ -17,7 +17,6 @@ public class CalcTelephoneBill {
 			BufferedWriter writer = new BufferedWriter(new FileWriter(writerFileName));
 			BufferedReader reader = new BufferedReader(new FileReader(readFileName));
 			int basicFee = 1000;	// 基本料金(月)
-			int minuteFee = 20;	//通話料金(分)
 			int totalTelephoneFee = 0;
 			String line;	//行を受け取る変数
 			String userInfo = "";	//契約者情報
@@ -32,7 +31,6 @@ public class CalcTelephoneBill {
 					serviceCodeList.clear();
 					registerPhoneNumList.clear();
 					basicFee = 1000;
-					minuteFee = 20;
 					totalTelephoneFee = 0;
 
 					//契約者情報取得
@@ -52,42 +50,23 @@ public class CalcTelephoneBill {
 					break;
 
 				case '5':
-					//通話開始時間を取得
-					int startTelephoneTime = record.getStartHour();
-
-					// E1でかつ、通話開始時間が日勤帯の場合、通話料は5円引き/分
-					if (checkLunchService(serviceCodeList,startTelephoneTime)) {
-						minuteFee -= 5;
-					}
-
-					// 登録先電話番号への通話半額
-					String phoneNum = record.getCallNumber();
-					if (registerPhoneNumList.contains(phoneNum)) {
-						minuteFee = minuteFee/2;
-					}
-
-					// 通話料算出
-					int telephoneFee = getTelephoneFee(minuteFee,line);
-					totalTelephoneFee += telephoneFee;
-
-					//case5は繰り返す可能性があるので初期化しておく。
-					minuteFee = 20;
+					totalTelephoneFee += calcUnitPrice(serviceCodeList, registerPhoneNumList, record) * record.getCallMinutes();
 					break;
 
 				case '9':
-					//区切り線を"======="習得
+					//区切り線を"======="取得
 					String separeteLine = line;
 
 					//サービスコードに応じて、基本料金を算出
-					calcBasicFee(basicFee,serviceCodeList);
-					System.out.println(userInfo + "\n");
-					System.out.println("5 " + basicFee + "\n");
-					System.out.println("7 " + totalTelephoneFee + "\n");
-					System.out.println(separeteLine + "\n");
-//					writer.write(userInfo + "\n");
-//					writer.write("5 " + basicFee + "\n");
-//					writer.write("7 " + totalTelephoneFee + "\n");
-//					writer.write(separeteLine + "\n");
+//					calcBasicFee(basicFee,serviceCodeList);
+//					System.out.println(userInfo + "\n");
+//					System.out.println("5 " + basicFee + "\n");
+//					System.out.println("7 " + totalTelephoneFee + "\n");
+//					System.out.println(separeteLine + "\n");
+					writer.write(userInfo + "\n");
+					writer.write("5 " + basicFee + "\n");
+					writer.write("7 " + totalTelephoneFee + "\n");
+					writer.write(separeteLine + "\n");
 					break;
 				}
 			}
@@ -105,33 +84,17 @@ public class CalcTelephoneBill {
 
 	// flushとfinallyは不要。
 
-
-	public static String getUserInfo(String line) {
-		return  line;
-	}
-
-	public static String getServiceCode(String line) {
-		return line.substring(2, 4);
-	}
-	public static String getRegsiterPhoneNum(String line) {
-		return line.substring(5,18);
-	}
-	public static int getStartTelephoneTime(String line) {
-		return Integer.parseInt(line.substring(13,15));
-	}
-	private static boolean checkLunchService(ArrayList<String> serviceCodeList, int startTelephoneTime) {
-		if (serviceCodeList.contains("E1") && 8 <= startTelephoneTime && startTelephoneTime <=17) {
-			return true;
+	public static int calcUnitPrice(ArrayList<String> serviceCodeList, ArrayList<String> registerPhoneNumList, Record record) {
+		int minuteFee = 20;
+		if (serviceCodeList.contains("E1") &&  8 <= record.getStartHour() && record.getStartHour() <=17) {
+			minuteFee -= 5;
 		}
-		return false;
+		if (registerPhoneNumList.contains(record.getCallNumber())) {
+			minuteFee = minuteFee/2;
+		}
+		return minuteFee;
 	}
 
-	public static String getPhoneNum(String line) {
-		return line.substring(23,36);
-	}
-	public static int getTelephoneFee(int minuteFee, String line) {
-		return minuteFee * Integer.parseInt(line.substring(19,22));
-	}
 	private static void calcBasicFee(int basicFee, ArrayList<String> serviceCodeList) {
 		if (serviceCodeList.contains("C1")) {
 			basicFee += 100;
