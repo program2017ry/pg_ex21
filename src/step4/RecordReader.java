@@ -15,7 +15,8 @@ public class RecordReader {
 		this(new FileReader("C:\\esm-semi\\ex21\\record.log"));
 	}
 
-	//　コンストラクタ2(引数あり)
+
+//　コンストラクタ2(引数あり)
 	public RecordReader(Reader reader) {
 		this.reader = new BufferedReader(reader);
 	}
