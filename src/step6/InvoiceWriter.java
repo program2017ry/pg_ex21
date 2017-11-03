@@ -3,23 +3,25 @@ package step6;
 import java.io.BufferedWriter;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.io.PrintWriter;
+import java.io.Writer;
 
 public class InvoiceWriter {
-	InvoiceWriter(Iovoice invoice,String filename) {
-		try {
-			PrintWriter writer = new PrintWriter(new BufferedWriter(new FileWriter(filename)));
-
-			// 情報を全てString型にして、Listに入れる。
-			String[] invoiceList = {invoice.constractorPhoneNum,String.valueOf(invoice.basicFee),String.valueOf(invoice.totalTelephoneFee)};
-
-			// 全ての要素を出力する。
-			for (String string : invoiceList) {
-				writer.println(string);
-			}
-			writer.close();
-		} catch (IOException e) {
-			System.out.println(e);
-		}
+	Writer writer;
+	InvoiceWriter() throws IOException {
+		String writerFileName = "C:\\esm-semi\\ex21\\invoice.dat";
+		 this.writer = new BufferedWriter(new FileWriter(writerFileName));
 	}
+	InvoiceWriter(Writer writer) {
+		this.writer = writer;
+	}
+
+	public void write(Invoice invoice) throws IOException {
+		writer.write("1 " + invoice.getOwnerTelNumber() + "\n");
+		writer.write("5 " + invoice.getBasicCharge() + "\n");
+		writer.write("7 " + invoice.getCallCharge() + "\n");
+		writer.write("9 ====================\n");
+	};
+	public void close() throws IOException{
+		writer.close();
+	};
 }

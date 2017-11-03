@@ -12,12 +12,9 @@ public class CalcTelephoneBill {
 			RecordReader reader = new RecordReader();
 			String writerFileName = "C:\\esm-semi\\ex21\\invoice.dat";
 			BufferedWriter writer = new BufferedWriter(new FileWriter(writerFileName));
-			int basicFee = 1000;	// 基本料金(月)
-			int totalTelephoneFee = 0;
-			String constractorPhoneNum = "";	//契約者情報
+			Invoice invoice = new Invoice();
 			ArrayList <String> serviceCodeList = new ArrayList();	// 加入サービス
 			ArrayList <String> registerPhoneNumList = new ArrayList();	//C1の場合の登録電話番号
-
 
 			for (Record record = reader.read(); record != null; record = reader.read()) {
 				switch (record.getRecordCode()) {
@@ -25,11 +22,10 @@ public class CalcTelephoneBill {
 					// 初期化処理
 					serviceCodeList.clear();
 					registerPhoneNumList.clear();
-					basicFee = 1000;
-					totalTelephoneFee = 0;
+					invoice.clear();
 
 					//契約者情報取得
-					constractorPhoneNum = record.getOwnerTelNumber();
+					invoice.setOwnerTelNumber(record.getOwnerTelNumber());
 					break;
 
 				case '2':
@@ -45,7 +41,7 @@ public class CalcTelephoneBill {
 					break;
 
 				case '5':
-					totalTelephoneFee += calcUnitPrice(serviceCodeList, registerPhoneNumList, record) * record.getCallMinutes();
+					invoice.addCallCharge(calcUnitPrice(serviceCodeList, registerPhoneNumList, record) * record.getCallMinutes());
 					break;
 
 				case '9':
@@ -53,11 +49,11 @@ public class CalcTelephoneBill {
 					String separeteLine = "*************************";
 
 					//サービスコードに応じて、基本料金を算出
-					calcBasicFee(basicFee,serviceCodeList);
-					System.out.println(constractorPhoneNum + "\n");
-					System.out.println("5 " + basicFee + "\n");
-					System.out.println("7 " + totalTelephoneFee + "\n");
-					System.out.println(separeteLine + "\n");
+					calcBasicCharge(invoice,serviceCodeList);
+					System.out.print(invoice.getOwnerTelNumber() + "\n");
+					System.out.print("5 " + invoice.getBasicCharge() + "\n");
+					System.out.print("7 " + invoice.getCallCharge() + "\n");
+					System.out.print(separeteLine + "\n");
 //					writer.write(constractorPhoneNum + "\n");
 //					writer.write("5 " + basicFee + "\n");
 //					writer.write("7 " + totalTelephoneFee + "\n");
@@ -90,13 +86,14 @@ public class CalcTelephoneBill {
 		return minuteFee;
 	}
 
-	private static void calcBasicFee(int basicFee, ArrayList<String> serviceCodeList) {
+	private static void calcBasicCharge(Invoice invoice, ArrayList<String> serviceCodeList) {
 		if (serviceCodeList.contains("C1")) {
-			basicFee += 100;
+			invoice.addBasicCharge(100);
 		}
 		if (serviceCodeList.contains("E1")) {
-			basicFee += 200;
+			invoice.addBasicCharge(200);
 		}
+		invoice.addBasicCharge(1000);
 	}
 
 }
